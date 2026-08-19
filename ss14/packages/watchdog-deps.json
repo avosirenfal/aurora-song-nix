@@ -1,0 +1,162 @@
+[
+  {
+    "pname": "Dapper",
+    "version": "2.1.66",
+    "hash": "sha256-e5n/wnAFGPDSe30oQQ0fanXrvFZYYa+qCDSTHtfQmPw="
+  },
+  {
+    "pname": "JetBrains.Annotations",
+    "version": "2025.2.4",
+    "hash": "sha256-YJpS77UH9tTETCKHr5M+bQOax1BLPFqIr/i+KLN9tEI="
+  },
+  {
+    "pname": "Microsoft.Data.Sqlite",
+    "version": "10.0.9",
+    "hash": "sha256-JaMlFYVX93+OlZGe6JfrZAmqN2U78Q2Tv7mxmV2udQw="
+  },
+  {
+    "pname": "Microsoft.Data.Sqlite.Core",
+    "version": "10.0.9",
+    "hash": "sha256-qecYi4Zv3k1rMG66B5NUGv0GfUZwJ/CuFOZx/McApYk="
+  },
+  {
+    "pname": "Microsoft.Diagnostics.NETCore.Client",
+    "version": "0.2.661903",
+    "hash": "sha256-zNBH4+L+9cCM+pMIaFDUhy9aCJMPOLamGqrrRruOyG0="
+  },
+  {
+    "pname": "Microsoft.Extensions.DependencyModel",
+    "version": "10.0.0",
+    "hash": "sha256-oCcIjmwH8H0n9bT3wQBWdotMvYuoiazfiKrXAs2bLiI="
+  },
+  {
+    "pname": "Mono.Posix.NETStandard",
+    "version": "1.0.0",
+    "hash": "sha256-/F61k7MY/fu2FcfW7CkyjuUroKwlYAXPQFVeDs1QknY="
+  },
+  {
+    "pname": "NetEscapades.Configuration.Yaml",
+    "version": "3.1.0",
+    "hash": "sha256-FWDIrzt9Ko5WaTddUMWONAdzMSLTTumnAEbRVoFAjbQ="
+  },
+  {
+    "pname": "Newtonsoft.Json",
+    "version": "13.0.4",
+    "hash": "sha256-8JCB1FdAW681qXP6DFDWvycu1oPyVoxaYgpJ2pUvZSk="
+  },
+  {
+    "pname": "Serilog",
+    "version": "4.3.0",
+    "hash": "sha256-jyIy4BjsyFXge3aO4GRFAdnX4/rz1MHfBkBDIpCDsTw="
+  },
+  {
+    "pname": "Serilog.AspNetCore",
+    "version": "10.0.0",
+    "hash": "sha256-z7dY6pY2Kkns20mpzZN2GOfV172gDWpamKDXHyLhEJs="
+  },
+  {
+    "pname": "Serilog.Extensions.Hosting",
+    "version": "10.0.0",
+    "hash": "sha256-zFQMZkAPqg+j2ZI0oBN07hO+9MFiyy5YECRbz7msxeU="
+  },
+  {
+    "pname": "Serilog.Extensions.Logging",
+    "version": "10.0.0",
+    "hash": "sha256-MgfWK/SJWUPxPzrnCUnxn6Sy+SBVmP3dYd60uy80NdE="
+  },
+  {
+    "pname": "Serilog.Formatting.Compact",
+    "version": "3.0.0",
+    "hash": "sha256-nejEYqJEMG9P2iFZvbsCUPr5LZRtxbdUTLCI9N71jHY="
+  },
+  {
+    "pname": "Serilog.Settings.Configuration",
+    "version": "10.0.0",
+    "hash": "sha256-WJK+wR7XPGAtD+vO+pjF5mn4qy8tO5uWIqHhovL0lAs="
+  },
+  {
+    "pname": "Serilog.Sinks.Console",
+    "version": "6.1.1",
+    "hash": "sha256-CfIg4Us4kSMQAn6rU2rsAeE22g6MpFiZdhoZWySpZeY="
+  },
+  {
+    "pname": "Serilog.Sinks.Debug",
+    "version": "3.0.0",
+    "hash": "sha256-7/LmoRF1rUDFhJ47bTRQQFRgSHnZDO8484r3sCGqYvE="
+  },
+  {
+    "pname": "Serilog.Sinks.File",
+    "version": "3.2.0",
+    "hash": "sha256-h73u7f9jl6Ys+s7LuVWiJ2vGK3U7dv8mi8q5qu7AFWg="
+  },
+  {
+    "pname": "Serilog.Sinks.File",
+    "version": "4.1.0",
+    "hash": "sha256-ir1quhEV0eLu65sZfJd+SlTcyJVQ/iJDVJb+4GC6x+c="
+  },
+  {
+    "pname": "Serilog.Sinks.File",
+    "version": "7.0.0",
+    "hash": "sha256-LxZYUoUPkCjIIVarJilnXnqQiMrFNJtoRilmzTNtUjo="
+  },
+  {
+    "pname": "Serilog.Sinks.Http",
+    "version": "5.2.1",
+    "hash": "sha256-sIaf2qVtAvHE6pUpVNXXB8wC5X0u6vJq+T16ok+FAi8="
+  },
+  {
+    "pname": "Serilog.Sinks.Loki",
+    "version": "3.0.1-beta1",
+    "hash": "sha256-A2HGBI9lU0paFJYv7S7p8wxPoikZywwXu4gUFJXWFEc="
+  },
+  {
+    "pname": "Serilog.Sinks.PeriodicBatching",
+    "version": "2.2.0",
+    "hash": "sha256-4hCjjmVX1nFCdxr+GHo8755xSClEv/486fnzHuspJI0="
+  },
+  {
+    "pname": "Serilog.Sinks.RollingFile",
+    "version": "3.3.0",
+    "hash": "sha256-yLpTDHTnwGSXmMYrQsuYB6pr1akCg68POTFRByz2SRQ="
+  },
+  {
+    "pname": "SourceGear.sqlite3",
+    "version": "3.50.4.5",
+    "hash": "sha256-yPOyLiK4QoTfE3IED0hFl1JJYjmt8RBB3fp1a1CwvqE="
+  },
+  {
+    "pname": "SQLitePCLRaw.bundle_e_sqlite3",
+    "version": "3.0.3",
+    "hash": "sha256-TPRW+2PX4EPVC79or+ZxxD1cJtzf1CRckvEuGq2rY0o="
+  },
+  {
+    "pname": "SQLitePCLRaw.config.e_sqlite3",
+    "version": "3.0.3",
+    "hash": "sha256-Hwzxtx+/KLkZNWSs1btOMJMkgt23P0p98t7hUhbKShw="
+  },
+  {
+    "pname": "SQLitePCLRaw.core",
+    "version": "2.1.11",
+    "hash": "sha256-s/fxEoYlNf9c2C4HZueMzPCBvpiViDVlSpg7epB0GXY="
+  },
+  {
+    "pname": "SQLitePCLRaw.core",
+    "version": "3.0.3",
+    "hash": "sha256-MLuN7KzfhWyVX3i4pi55KQp9J8JR83sCCveeUusDKqw="
+  },
+  {
+    "pname": "SQLitePCLRaw.provider.e_sqlite3",
+    "version": "3.0.3",
+    "hash": "sha256-brVPu6YEBbKtfKrf5PV8sDZZsmlZFgL5Kse6FP01uF0="
+  },
+  {
+    "pname": "Tmds.DBus",
+    "version": "0.94.2",
+    "hash": "sha256-iREd3uL/rJ7Z/qqCo5vuKzq/84RtvdlbETOL4caDSWc="
+  },
+  {
+    "pname": "YamlDotNet",
+    "version": "13.0.1",
+    "hash": "sha256-vrPm3nActRBC+psOSDGu2sjy/FL1Sak/okZPwurOUB8="
+  }
+]
