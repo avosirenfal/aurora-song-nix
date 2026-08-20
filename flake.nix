@@ -26,6 +26,7 @@
           ./hardware-configuration.nix
           ./nix-settings.nix
           ./configuration.nix
+          ./ss14.nix
         ];
       };
     };

@@ -11,6 +11,7 @@ let
   formatToml = pkgs.formats.toml { };
   ss14-packages = import ../packages/default.nix { inherit pkgs; };
   dataDir = "/var/lib/ss14-watchdog";
+  filterNulls = x: lib.filterAttrsRecursive (n: v: v != null) x;
 in
 {
   options.services.ss14-watchdog = {
@@ -68,7 +69,7 @@ in
               # having no @SerialName nor sum types is pretty dismal
               ConfigFile = mkOption {
                 type = types.path;
-                default = formatToml.generate "config.toml" config.Settings;
+                default = formatToml.generate "config.toml" (filterNulls config.Settings);
                 defaultText = literalMD "Generated from Settings.";
                 description = ''
                   Path to the TOML config file for this instance. Defaults to a
@@ -377,7 +378,7 @@ in
           in
           pkgs.writeShellScript "ss14-watchdog-prestart" ''
             ${mkConfig cfg.configFile "${dataDir}/appsettings.yml"}
-            ${strings.concatLines mapAttrsToList (name: inst: mkInstanceConfig name inst)}
+            ${strings.concatLines (mapAttrsToList (name: inst: mkInstanceConfig name inst) cfg.instances)}
           '';
 
         ExecStart = "${cfg.package}/bin/SS14.Watchdog";

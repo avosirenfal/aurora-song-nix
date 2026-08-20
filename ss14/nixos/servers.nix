@@ -36,11 +36,6 @@ in
                 description = "Name of the instance.";
               };
 
-              apiToken = mkOption {
-                type = types.str;
-                description = "Watchdog API token for this instance.";
-              };
-
               bindIp = mkOption {
                 type = types.str;
                 default = "0.0.0.0";
@@ -103,12 +98,11 @@ in
     services.ss14-watchdog.enable = true;
     services.ss14-watchdog.instances = mapAttrs (name: inst: {
       Name = inst.name;
-      ApiToken = inst.apiToken;
       ApiPort = inst.port;
 
       update.manifest.ManifestUrl = inst.manifestUrl;
 
-      ConfigFile = inst.ConfigFile;
+      ConfigFile = mkIf (inst.ConfigFile != null) inst.ConfigFile;
 
       Settings = recursiveUpdate inst.Settings (
         {
@@ -141,14 +135,18 @@ in
         ensureDBOwnership = true;
       }) pgInstances;
 
-      authentication = ''
-        # type database  user  auth-method
-        local all all peer map=ss14map
+      authentication =
+        let
+          dbUsers = concatStringsSep "," (mapAttrsToList (n: _: "ss14_${n}") pgInstances);
+        in
+        ''
+          # type database  user        auth-method
+          local  all       ${dbUsers}  peer map=ss14map
 
-        local all       all     trust
-        host  all       all     127.0.0.1/32 trust
-        host  all       all     ::1/128      trust
-      '';
+          local  all       all         trust
+          host   all       all         127.0.0.1/32 trust
+          host   all       all         ::1/128      trust
+        '';
       identMap =
         let
           # watchdog spawns game instances so they run as ss14-watchdog

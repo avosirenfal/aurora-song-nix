@@ -7,6 +7,7 @@
 let
   format = pkgs.formats.toml { };
 in
+with lib;
 {
   net = mkOption {
     description = "Network configuration.";
@@ -79,7 +80,7 @@ in
         };
         lobbyenabled = mkOption {
           type = types.bool;
-          default = false;
+          default = true;
           description = "Enables the lobby instead of straight up throwing clients into a game.";
         };
       };

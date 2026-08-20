@@ -9,7 +9,7 @@ let
   cfg = config.services.robust-cdn;
   format = pkgs.formats.json { };
   ss14-packages = import ../packages/default.nix { inherit pkgs; };
-  dataDir = /var/lib/robust-cdn; # systemd StateDirectory creates this
+  dataDir = "/var/lib/robust-cdn"; # systemd StateDirectory creates this
 in
 {
   options.services.robust-cdn = {
@@ -303,7 +303,7 @@ in
       wants = [ "network-online.target" ];
 
       serviceConfig = {
-        Type = "notify";
+        Type = "simple";
         User = "robust-cdn";
         Group = "robust-cdn";
         WorkingDirectory = dataDir;
