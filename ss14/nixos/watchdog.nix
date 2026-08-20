@@ -52,7 +52,7 @@ in
               Settings = mkOption {
                 type = types.submodule {
                   freeformType = formatToml.type;
-                  options = import ../_internal/location-options.nix {
+                  options = import ../_internal/instance-options.nix {
                     inherit pkgs lib config;
                   };
                 };
