@@ -9,21 +9,26 @@ let
   cfg = config.services.ss14-servers;
   formatToml = pkgs.formats.toml { };
 
-  pgInstances = filterAttrs (n: v: v.postgres) cfg.instances;
-  promInstances = filterAttrs (n: v: v.prometheus) cfg.instances;
+  instanceGroup = "key:port:" rec {
+    instances = filterAttrs (n: v: v.${key}) cfg.instances;
+    hasAny = instances != { };
+    names = sort (a: b: a < b) (attrNames instances);
+    # map instance names to monotonically increasing unique ports (44880, 44881, ...)
+    ports =
+      if port != null then listToAttrs (imap0 (i: name: nameValuePair name (port + i)) names) else null;
+    portFor = name: ports.${name};
+  };
 
-  anyPostgres = pgInstances != { };
-  anyPrometheus = promInstances != { };
-
-  # map instance names to monotonically increasing unique ports (44880, 44881, ...)
-  promInstanceNames = sort (a: b: a < b) (attrNames promInstances);
-  promPorts = listToAttrs (imap0 (i: name: nameValuePair name (44880 + i)) promInstanceNames);
+  postgres = instanceGroup "postgres" null;
+  prometheus = instanceGroup "prometheus" 44880;
+  loki = instanceGroup "loki" null;
 in
 {
   options.services.ss14-servers = {
     enable = mkEnableOption "Space Station 14 Servers";
 
     instances = mkOption {
+      description = "SS14 instances";
       default = { };
       type = types.attrsOf (
         types.submodule (
@@ -52,7 +57,7 @@ in
                 type = types.bool;
                 default = true;
                 description = ''
-                  Use PostgreSQL for player slot and preference
+                  Use a local PostgreSQL instance for player slot and preference
                   database instead of SQLite.
                 '';
               };
@@ -60,7 +65,13 @@ in
               prometheus = mkOption {
                 type = types.bool;
                 default = false;
-                description = "Whether to use Prometheus for performance metrics.";
+                description = "Whether to use a local Prometheus instance for performance metrics.";
+              };
+
+              loki = mkOption {
+                type = types.bool;
+                default = false;
+                description = "Whether to push logs to a local Loki instance.";
               };
 
               manifestUrl = mkOption {
@@ -121,23 +132,30 @@ in
           metrics = {
             enabled = true;
             host = "localhost";
-            port = promPorts.${name};
+            port = prometheus.portFor name;
+          };
+        }
+        // optionalAttrs inst.loki {
+          loki = {
+            enabled = true;
+            address = "http://localhost:3100";
+            name = name;
           };
         }
       );
     }) cfg.instances;
 
-    services.postgresql = mkIf anyPostgres {
+    services.postgresql = mkIf postgres.hasAny {
       enable = true;
-      ensureDatabases = mapAttrsToList (n: _: "ss14_${n}") pgInstances;
+      ensureDatabases = mapAttrsToList (n: _: "ss14_${n}") postgres.instances;
       ensureUsers = mapAttrsToList (n: _: {
         name = "ss14_${n}";
         ensureDBOwnership = true;
-      }) pgInstances;
+      }) postgres.instances;
 
       authentication =
         let
-          dbUsers = concatStringsSep "," (mapAttrsToList (n: _: "ss14_${n}") pgInstances);
+          dbUsers = concatStringsSep "," (mapAttrsToList (n: _: "ss14_${n}") postgres.instances);
         in
         ''
           # type database  user        auth-method
@@ -152,12 +170,72 @@ in
           # watchdog spawns game instances so they run as ss14-watchdog
           # let watchdog system user access db instance for any ss14
           # postgres account
-          mappings = mapAttrsToList (n: _: "ss14map ss14-watchdog ss14_${n}") pgInstances;
+          mappings = mapAttrsToList (
+            n: _: "ss14map ${config.services.ss14-watchdog.serviceName} ss14_${n}"
+          ) postgres.instances;
         in
         concatStringsSep "\n" mappings;
     };
 
-    services.prometheus = mkIf anyPrometheus {
+    services.loki = mkIf loki.hasAny {
+      enable = true;
+      configuration = {
+        auth_enabled = false;
+
+        server = {
+          http_listen_port = 3100;
+          http_listen_address = "127.0.0.1";
+        };
+
+        common = {
+          path_prefix = "/var/lib/loki";
+          replication_factor = 1;
+          ring = {
+            instance_addr = "127.0.0.1";
+            kvstore.store = "inmemory";
+          };
+        };
+
+        schema_config = {
+          configs = [
+            {
+              from = "2024-01-01";
+              store = "tsdb";
+              object_store = "filesystem";
+              schema = "v13";
+              index = {
+                prefix = "index_";
+                period = "24h";
+              };
+            }
+          ];
+        };
+
+        storage_config = {
+          filesystem = {
+            directory = "/var/lib/loki/chunks";
+          };
+          tsdb_shipper = {
+            active_index_directory = "/var/lib/loki/tsdb-index";
+            cache_location = "/var/lib/loki/tsdb-cache";
+          };
+        };
+
+        compactor = {
+          working_directory = "/var/lib/loki/compactor";
+          retention_enabled = true;
+          delete_request_store = "filesystem";
+        };
+
+        limits_config = {
+          retention_period = "30d";
+          reject_old_samples = true;
+          reject_old_samples_max_age = "168h";
+        };
+      };
+    };
+
+    services.prometheus = mkIf prometheus.hasAny {
       enable = true;
       scrapeConfigs = mapAttrsToList (name: inst: {
         job_name = name;
@@ -168,7 +246,7 @@ in
             ];
           }
         ];
-      }) promInstances;
+      }) prometheus.instances;
     };
   };
 }

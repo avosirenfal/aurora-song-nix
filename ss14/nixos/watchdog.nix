@@ -10,7 +10,8 @@ let
   format = pkgs.formats.yaml { };
   formatToml = pkgs.formats.toml { };
   ss14-packages = import ../packages/default.nix { inherit pkgs; };
-  dataDir = "/var/lib/ss14-watchdog";
+  serviceName = config.services.ss14-watchdog.serviceName;
+  dataDir = "/var/lib/${serviceName}";
   filterNulls = x: lib.filterAttrsRecursive (n: v: v != null) x;
 in
 {
@@ -21,6 +22,12 @@ in
       type = types.package;
       default = ss14-packages.ss14-watchdog;
       description = "The SS14.Watchdog package to use.";
+    };
+
+    serviceName = mkOption {
+      type = types.str;
+      default = "watchdog";
+      description = "The name used for the SS14 systemd unit, user, and group.";
     };
 
     instances = mkOption {
@@ -112,6 +119,7 @@ in
                 type = types.submodule {
                   options = {
                     manifest = mkOption {
+                      description = "Manifest update method";
                       default = null;
                       type = types.nullOr (
                         types.submodule {
@@ -127,6 +135,7 @@ in
                     };
 
                     git = mkOption {
+                      description = "Git update method";
                       default = null;
                       type = types.nullOr (
                         types.submodule {
@@ -152,6 +161,7 @@ in
                     };
 
                     jenkins = mkOption {
+                      description = "Jenkins update method";
                       default = null;
                       type = types.nullOr (
                         types.submodule {
@@ -327,15 +337,15 @@ in
       }) cfg.instances
     );
 
-    users.users.ss14-watchdog = {
+    users.users.${serviceName} = {
       isSystemUser = true;
-      group = "ss14-watchdog";
+      group = serviceName;
       home = dataDir;
       description = "SS14.Watchdog service user";
     };
-    users.groups.ss14-watchdog = { };
+    users.groups.${serviceName} = { };
 
-    systemd.services.ss14-watchdog = {
+    systemd.services.${serviceName} = {
       description = "Space Station 14 Watchdog server";
       wantedBy = [ "multi-user.target" ];
       after = [ "network-online.target" ];
@@ -347,51 +357,84 @@ in
       # and can't write outside the state directory and /tmp?
       environment = {
         DOTNET_CLI_HOME = "/tmp";
+        # libraries required by the ss14 server
+        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (
+          with pkgs;
+          [
+            stdenv.cc.cc.lib
+
+            # .net runtime dependencies
+            zlib
+            icu
+            openssl
+            curl
+            libkrb5
+            lttng-ust
+
+            # ss14 dependencies
+            sqlite
+            freetype
+            fontconfig
+          ]
+        );
       };
 
-      serviceConfig = {
-        Type = "simple";
-        User = "ss14-watchdog";
-        Group = "ss14-watchdog";
-        WorkingDirectory = dataDir;
-        StateDirectory = "ss14-watchdog";
-        UMask = "0077";
-
-        Restart = "on-failure";
-        OOMPolicy = "continue";
-        KillMode = mkIf cfg.settings.Process.PersistServers "process";
-
-        EnvironmentFile = mkIf (cfg.environmentFile != null) cfg.environmentFile;
-        ExecStartPre =
-          let
-            mkConfig =
-              srcFile: outDst:
-              if cfg.environmentFile != null then
-                ''${pkgs.envsubst}/bin/envsubst -i "${srcFile}" -o "${outDst}"''
-              else
-                ''ln -sf "${srcFile}" "${outDst}'';
-
-            mkInstanceConfig = name: inst: ''
-              mkdir -p "${dataDir}/instances/${name}"
-              ${mkConfig inst.ConfigFile "${dataDir}/instances/${name}/config.toml"}
-            '';
-          in
-          pkgs.writeShellScript "ss14-watchdog-prestart" ''
-            ${mkConfig cfg.configFile "${dataDir}/appsettings.yml"}
-            ${strings.concatLines (mapAttrsToList (name: inst: mkInstanceConfig name inst) cfg.instances)}
+      serviceConfig =
+        let
+          # watchdog runs dynamically linked builds from CI
+          # but we shouldn't enable nix-ld for the whole system unnecessarily
+          fakeLib64 = pkgs.runCommand "fake-lib64" { } ''
+            mkdir -p $out
+            ln -s ${pkgs.stdenv.cc.bintools.dynamicLinker} $out/ld-linux-x86-64.so.2
           '';
+        in
+        {
+          Type = "simple";
+          User = serviceName;
+          Group = serviceName;
+          WorkingDirectory = dataDir;
+          StateDirectory = serviceName;
+          UMask = "0077";
 
-        ExecStart = "${cfg.package}/bin/SS14.Watchdog";
+          BindReadOnlyPaths = [
+            "${fakeLib64}:/lib64"
+          ];
 
-        PrivateTmp = true;
-        ProtectHome = true;
-        ProtectSystem = "strict";
-        NoNewPrivileges = true;
-        CapabilityBoundingSet = "";
-        LockPersonality = true;
-        RestrictRealtime = true;
-        SystemCallArchitectures = "native";
-      };
+          Restart = "on-failure";
+          OOMPolicy = "continue";
+          KillMode = mkIf cfg.settings.Process.PersistServers "process";
+
+          EnvironmentFile = mkIf (cfg.environmentFile != null) cfg.environmentFile;
+          ExecStartPre =
+            let
+              mkConfig =
+                srcFile: outDst:
+                if cfg.environmentFile != null then
+                  ''${pkgs.envsubst}/bin/envsubst -i "${srcFile}" -o "${outDst}"''
+                else
+                  ''ln -sf "${srcFile}" "${outDst}'';
+
+              mkInstanceConfig = name: inst: ''
+                mkdir -p "${dataDir}/instances/${name}"
+                ${mkConfig inst.ConfigFile "${dataDir}/instances/${name}/config.toml"}
+              '';
+            in
+            pkgs.writeShellScript "ss14-watchdog-prestart" ''
+              ${mkConfig cfg.configFile "${dataDir}/appsettings.yml"}
+              ${strings.concatLines (mapAttrsToList (name: inst: mkInstanceConfig name inst) cfg.instances)}
+            '';
+
+          ExecStart = "${cfg.package}/bin/SS14.Watchdog";
+
+          PrivateTmp = true;
+          ProtectHome = true;
+          ProtectSystem = "strict";
+          NoNewPrivileges = true;
+          CapabilityBoundingSet = "";
+          LockPersonality = true;
+          RestrictRealtime = true;
+          SystemCallArchitectures = "native";
+        };
     };
   };
 }

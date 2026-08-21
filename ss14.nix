@@ -1,8 +1,40 @@
 { config, pkgs, ... }:
 let
   # you have to create this file manually on the host!!!
-  # it should have `AURORASONG_UPDATE_TOKEN="something"` in it
-  secretsFile = "/var/lib/secrets/robust-cdn.env";
+  # it should have the following values:
+  # AURORASONG_UPDATE_TOKEN="something"
+  # AURORASONG_INSTANCE_TOKEN="something"
+  # ADMIN_API_TOKEN="something"
+  # WATCHDOG_WEBHOOK="something"
+  # AHELP_WEBHOOK="something"
+  # ROUND_UPDATE_WEBHOOK="something"
+  secretsFile = "/var/lib/secrets/ss14.env";
+
+  # TODO: haven't figured out a good way to wrap serilog stuff for nix yet
+  serilog = {
+    Using = [
+      "Serilog.Sinks.Console"
+      "Serilog.Sinks.Loki"
+    ];
+    MinimumLevel = {
+      Default = "Information";
+      Override = {
+        SS14 = "Information";
+        Microsoft = "Warning";
+        "Microsoft.Hosting.Lifetime" = "Information";
+        "Microsoft.AspNetCore" = "Warning";
+      };
+    };
+    WriteTo = [
+      {
+        Name = "Console";
+        Args = {
+          OutputTemplate = "[{Timestamp:HH:mm:ss} {Level:u3} {SourceContext}] {Message:lj}{NewLine}{Exception}";
+        };
+      }
+    ];
+    Enrich = [ "FromLogContext" ];
+  };
 in
 {
   imports = [
@@ -12,9 +44,41 @@ in
   ];
 
   services.ss14-watchdog.environmentFile = secretsFile;
-  services.ss14-watchdog.settings.BaseUrl = "https://aurorasong.gay/watchdog";
   services.ss14-watchdog.instances.main.ApiToken = "$AURORASONG_INSTANCE_TOKEN";
-  services.ss14-watchdog.settings.Notification.DiscordWebhook = "$WATCHDOG_WEBHOOK";
+  services.ss14-watchdog.settings.PersistServers.Process = true;
+  services.ss14-watchdog.settings.Serilog = serilog;
+
+  # services.robust-cdn.settings.BaseUrl = "https://cdn.aurorasong.gay/";
+  # services.ss14-servers.instances.main.manifestUrl = "https://cdn.aurorasong.gay/fork/aurorasong/manifest";
+  # services.ss14-watchdog.settings.Notification.DiscordWebhook = "$WATCHDOG_WEBHOOK";
+
+  # bind to external ip instead of aurorasong.gay
+  services.robust-cdn.settings.Urls = "http://167.114.208.152:27690";
+  services.robust-cdn.settings.BaseUrl = "http://167.114.208.152:27690/";
+  services.ss14-servers.instances.main.manifestUrl =
+    "http://167.114.208.152:27690/fork/aurorasong/manifest";
+
+  services.ss14-servers.instances.main.Settings = (import ./ss14-aurora.nix);
+  /*
+    services.ss14-watchdog.settings.Notification.DiscordWebhook = "$WATCHDOG_WEBHOOK";
+    services.ss14-servers.instances.main.Settings.discord = {
+      ahelp_webhook = "$AHELP_WEBHOOK";
+      round_update_webhook = "$ROUND_UPDATE_WEBHOOK";
+    };
+  */
+
+  services.ss14-servers = {
+    enable = true;
+
+    instances.main = {
+      name = "aurorasong";
+      bindIp = "0.0.0.0";
+      port = 1212;
+
+      postgres = true;
+      prometheus = true;
+    };
+  };
 
   services.robust-cdn = {
     enable = true;
@@ -22,7 +86,6 @@ in
     environmentFile = secretsFile;
 
     settings = {
-      BaseUrl = "https://cdn.aurorasong.gay/";
       PathBase = "/";
 
       Manifest.Forks.aurorasong = {
@@ -43,25 +106,6 @@ in
 
       Cdn = {
         StreamCompressLevel = 5;
-      };
-    };
-  };
-
-  services.ss14-servers = {
-    enable = true;
-
-    instances.main = {
-      name = "aurorasong";
-      bindIp = "0.0.0.0";
-      port = 1212;
-
-      postgres = true;
-      prometheus = true;
-
-      manifestUrl = "https://cdn.aurorasong.gay/fork/aurorasong/manifest";
-
-      Settings = {
-        game.hostname = "Aurora Song";
       };
     };
   };

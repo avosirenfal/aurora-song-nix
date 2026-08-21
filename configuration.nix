@@ -12,6 +12,7 @@
   networking = {
     networkmanager.enable = false;
     useDHCP = true;
+    firewall.enable = false;
     nameservers = [
       "8.8.8.8"
       "1.1.1.1"
