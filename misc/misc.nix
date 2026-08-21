@@ -1,4 +1,10 @@
-{ lib, config, ... }: {
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
+{
   # allow root to psql directly if postgres is enabled
   services.postgresql = {
     ensureUsers = [
@@ -10,6 +16,18 @@
         };
       }
     ];
+
+    /*
+      authentication = ''
+        # type database  user  auth-method
+        local  all       all   peer map=rootmap
+      '';
+
+      identMap = ''
+        # map-name  system-username  database-username
+        rootmap     root             all
+      '';
+    */
   };
 
   programs.bash.interactiveShellInit = lib.mkIf config.services.postgresql.enable ''
