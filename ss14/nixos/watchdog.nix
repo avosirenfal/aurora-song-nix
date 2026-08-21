@@ -201,6 +201,7 @@ in
         options = {
           BaseUrl = mkOption {
             type = types.str;
+            default = "http://localhost:5000/";
             example = "https://builds.spacestation14.io/watchdog/";
             description = ''
               The external URL of the Watchdog. This is passed to instances automatically 
@@ -357,84 +358,75 @@ in
       # and can't write outside the state directory and /tmp?
       environment = {
         DOTNET_CLI_HOME = "/tmp";
-        # libraries required by the ss14 server
-        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (
-          with pkgs;
-          [
-            stdenv.cc.cc.lib
-
-            # .net runtime dependencies
-            zlib
-            icu
-            openssl
-            curl
-            libkrb5
-            lttng-ust
-
-            # ss14 dependencies
-            sqlite
-            freetype
-            fontconfig
-          ]
-        );
       };
 
-      serviceConfig =
-        let
-          # watchdog runs dynamically linked builds from CI
-          # but we shouldn't enable nix-ld for the whole system unnecessarily
-          fakeLib64 = pkgs.runCommand "fake-lib64" { } ''
-            mkdir -p $out
-            ln -s ${pkgs.stdenv.cc.bintools.dynamicLinker} $out/ld-linux-x86-64.so.2
-          '';
-        in
-        {
-          Type = "simple";
-          User = serviceName;
-          Group = serviceName;
-          WorkingDirectory = dataDir;
-          StateDirectory = serviceName;
-          UMask = "0077";
+      serviceConfig = {
+        Type = "simple";
+        User = serviceName;
+        Group = serviceName;
+        WorkingDirectory = dataDir;
+        StateDirectory = serviceName;
+        UMask = "0077";
 
-          BindReadOnlyPaths = [
-            "${fakeLib64}:/lib64"
-          ];
+        Restart = "on-failure";
+        OOMPolicy = "continue";
+        KillMode = mkIf cfg.settings.Process.PersistServers "process";
 
-          Restart = "on-failure";
-          OOMPolicy = "continue";
-          KillMode = mkIf cfg.settings.Process.PersistServers "process";
+        EnvironmentFile = mkIf (cfg.environmentFile != null) cfg.environmentFile;
+        ExecStartPre =
+          let
+            mkConfig =
+              srcFile: outDst:
+              if cfg.environmentFile != null then
+                ''${pkgs.envsubst}/bin/envsubst -i "${srcFile}" -o "${outDst}"''
+              else
+                ''ln -sf "${srcFile}" "${outDst}'';
 
-          EnvironmentFile = mkIf (cfg.environmentFile != null) cfg.environmentFile;
-          ExecStartPre =
-            let
-              mkConfig =
-                srcFile: outDst:
-                if cfg.environmentFile != null then
-                  ''${pkgs.envsubst}/bin/envsubst -i "${srcFile}" -o "${outDst}"''
-                else
-                  ''ln -sf "${srcFile}" "${outDst}'';
-
-              mkInstanceConfig = name: inst: ''
-                mkdir -p "${dataDir}/instances/${name}"
-                ${mkConfig inst.ConfigFile "${dataDir}/instances/${name}/config.toml"}
-              '';
-            in
-            pkgs.writeShellScript "ss14-watchdog-prestart" ''
-              ${mkConfig cfg.configFile "${dataDir}/appsettings.yml"}
-              ${strings.concatLines (mapAttrsToList (name: inst: mkInstanceConfig name inst) cfg.instances)}
+            mkInstanceConfig = name: inst: ''
+              mkdir -p "${dataDir}/instances/${name}"
+              ${mkConfig inst.ConfigFile "${dataDir}/instances/${name}/config.toml"}
             '';
+          in
+          pkgs.writeShellScript "ss14-watchdog-prestart" ''
+            ${mkConfig cfg.configFile "${dataDir}/appsettings.yml"}
+            ${strings.concatLines (mapAttrsToList (name: inst: mkInstanceConfig name inst) cfg.instances)}
+          '';
 
-          ExecStart = "${cfg.package}/bin/SS14.Watchdog";
+        ExecStart =
+          let
+            fhs = pkgs.buildFHSEnv {
+              name = "ss14-watchdog-fhs";
 
-          PrivateTmp = true;
-          ProtectHome = true;
-          ProtectSystem = "strict";
-          NoNewPrivileges = true;
-          CapabilityBoundingSet = "";
-          LockPersonality = true;
-          RestrictRealtime = true;
-          SystemCallArchitectures = "native";
-        };
+              targetPkgs =
+                pkgs: with pkgs; [
+                  # .net runtime dependencies
+                  zlib
+                  icu
+                  openssl
+                  curl
+                  libkrb5
+                  lttng-ust
+
+                  # ss14 dependencies
+                  sqlite
+                  freetype
+                  fontconfig
+                ];
+
+              runScript = "${cfg.package}/bin/SS14.Watchdog";
+            };
+          in
+          "${fhs}/bin/ss14-watchdog-fhs";
+
+        PrivateTmp = true;
+        ProtectHome = true;
+        ProtectSystem = "strict";
+        NoNewPrivileges = true;
+        CapabilityBoundingSet = "";
+        LockPersonality = true;
+        RestrictRealtime = true;
+        SystemCallArchitectures = "native";
+      };
     };
   };
 }

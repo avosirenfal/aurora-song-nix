@@ -9,7 +9,7 @@ let
   cfg = config.services.ss14-servers;
   formatToml = pkgs.formats.toml { };
 
-  instanceGroup = "key:port:" rec {
+  instanceGroup = key: port: rec {
     instances = filterAttrs (n: v: v.${key}) cfg.instances;
     hasAny = instances != { };
     names = sort (a: b: a < b) (attrNames instances);
@@ -118,7 +118,7 @@ in
       Settings = recursiveUpdate inst.Settings (
         {
           net.port = inst.port;
-          status.bind = "${inst.bindIp}:${toString inst.port}";
+          # status.bind = "${inst.bindIp}:${toString inst.port}";
         }
         // optionalAttrs inst.postgres {
           database = {
@@ -184,14 +184,13 @@ in
 
         server = {
           http_listen_port = 3100;
-          http_listen_address = "127.0.0.1";
         };
 
         common = {
+          instance_addr = "127.0.0.1";
           path_prefix = "/var/lib/loki";
           replication_factor = 1;
           ring = {
-            instance_addr = "127.0.0.1";
             kvstore.store = "inmemory";
           };
         };
@@ -232,6 +231,9 @@ in
           reject_old_samples = true;
           reject_old_samples_max_age = "168h";
         };
+
+        # not sure what this is or whether ss14 uses it
+        # ruler.alertmanager_url = "http://localhost:9093";
       };
     };
 
@@ -242,7 +244,7 @@ in
         static_configs = [
           {
             targets = [
-              "localhost:${toString promPorts.${name}}"
+              "localhost:${toString (prometheus.portFor name)}"
             ];
           }
         ];

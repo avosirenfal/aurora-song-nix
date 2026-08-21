@@ -67,16 +67,28 @@ in
     };
   */
 
+  # apparently good for performance
+  # https://docs.spacestation14.com/en/general-development/setup/server-hosting-tutorial.html
+  systemd.services.${config.services.ss14-watchdog.serviceName}.environment = {
+    DOTNET_TieredPGO = "1";
+    DOTNET_TC_QuickJitForLoops = "1";
+    DOTNET_ReadyToRun = "0";
+    ROBUST_NUMERICS_AVX = "true";
+  };
+
   services.ss14-servers = {
     enable = true;
 
     instances.main = {
       name = "aurorasong";
-      bindIp = "0.0.0.0";
-      port = 1212;
+      /*
+        bindIp = "0.0.0.0";
+        port = 1212;
+      */
 
       postgres = true;
       prometheus = true;
+      loki = true;
     };
   };
 
