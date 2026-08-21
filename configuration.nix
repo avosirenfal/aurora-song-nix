@@ -59,6 +59,9 @@
     git
     ripgrep
     fd
+    (pkgs.writeShellScriptBin "nxr" ''
+      exec sudo nixos-rebuild --flake /root/nixos#aurora switch "$@"
+    '')
   ];
 
   system.stateVersion = "26.11";
