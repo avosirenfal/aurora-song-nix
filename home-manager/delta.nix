@@ -14,13 +14,13 @@
     };
   };
 
-  programs.git = {
-    enable = true;
-  };
+  programs.jujutsu.enable = true;
+  programs.git.enable = true;
 
   programs.delta = {
     enable = true;
     enableGitIntegration = true;
+    enableJujutsuIntegration = true;
     options = {
       syntax-theme = "catppuccin-mocha";
       hyperlinks = true;

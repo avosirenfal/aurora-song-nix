@@ -235,6 +235,8 @@ in
 
     services.prometheus = mkIf prometheus.hasAny {
       enable = true;
+      globalConfig.scrape_interval = "1s";
+      globalConfig.evaluation_interval = "1s";
       scrapeConfigs = mapAttrsToList (name: inst: {
         job_name = name;
         static_configs = [

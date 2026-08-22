@@ -60,21 +60,18 @@ in
       "http://167.114.208.152:27690/fork/aurorasong/manifest";
   */
 
-  services.ss14-servers.instances.main.Settings = (import ./ss14-aurora.nix);
-
-  # webhooks in this file so they could in principle be conditionally disabled if
-  # this isn't in production
-  /*
-    services.ss14-watchdog.settings.Notification.DiscordWebhook = "$WATCHDOG_WEBHOOK";
-    services.ss14-servers.instances.main.Settings.discord = {
+  services.ss14-watchdog.settings.Notification.DiscordWebhook = "$WATCHDOG_WEBHOOK";
+  services.ss14-servers.instances.main.Settings = (import ./ss14-aurora.nix) // {
+    discord = {
       ahelp_webhook = "$AHELP_WEBHOOK";
       round_update_webhook = "$ROUND_UPDATE_WEBHOOK";
     };
-  */
+  };
 
   # apparently good for performance
   # https://docs.spacestation14.com/en/general-development/setup/server-hosting-tutorial.html
-  systemd.services.${config.services.ss14-watchdog.serviceName}.environment = {
+  services.ss14-watchdog.instances.main.EnvironmentVariables = {
+    DOTNET_gcServer = "1";
     DOTNET_TieredPGO = "1";
     DOTNET_TC_QuickJitForLoops = "1";
     DOTNET_ReadyToRun = "0";
@@ -121,6 +118,15 @@ in
         StreamCompressLevel = 5;
       };
     };
+  };
+
+  powerManagement.cpuFreqGovernor = "performance";
+  boot.kernel.sysctl = {
+    "net.core.wmem_max" = 8388608;
+    "net.core.rmem_max" = 8388608;
+    "net.core.wmem_default" = 262144;
+    "net.core.rmem_default" = 262144;
+    "net.core.netdev_max_backlog" = 5000;
   };
 
   services.nginx = {

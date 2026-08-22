@@ -14,12 +14,12 @@
 
   status = {
     enabled = true;
-    connectaddress = "udp://test.aurorasong.gay:1212";
+    connectaddress = "udp://aurorasong.gay:1212";
     # connectaddress = "udp://167.114.208.152:1212";
   };
 
   hub = {
-    server_url = "ss14s://test.aurorasong.gay/game";
+    server_url = "ss14s://aurorasong.gay/game";
     # server_url = "ss14s://167.114.208.152/game";
     hub_urls = "https://hub.playss14.com/";
     advertise = false;
