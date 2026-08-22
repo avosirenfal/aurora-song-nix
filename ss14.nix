@@ -62,6 +62,8 @@ in
 
   services.ss14-servers.instances.main.Settings = (import ./ss14-aurora.nix);
 
+  # webhooks in this file so they could in principle be conditionally disabled if
+  # this isn't in production
   /*
     services.ss14-watchdog.settings.Notification.DiscordWebhook = "$WATCHDOG_WEBHOOK";
     services.ss14-servers.instances.main.Settings.discord = {
@@ -136,6 +138,14 @@ in
       locations."/" = {
         proxyPass = "http://localhost:${toString config.services.robust-cdn.port}";
         proxyWebsockets = true; # dunno if robust-cdn uses websockets
+      };
+
+      locations."~ ^/fork/.*/publish/file" = {
+        proxyPass = "http://localhost:${toString config.services.robust-cdn.port}";
+
+        extraConfig = ''
+          client_max_body_size 5G;
+        '';
       };
     };
   };

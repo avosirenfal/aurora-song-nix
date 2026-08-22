@@ -1,3 +1,6 @@
+# SS14 game server config
+# serialized to config.toml by the watchdog systemd service at start time
+# any $DOLLAR_SIGN_VALUE will be replaced with the same name secret from /var/lib/secrets/ss14.env
 {
   game = {
     hostname = "[18+][MRP] Aurora's Song";

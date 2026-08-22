@@ -418,6 +418,10 @@ in
           in
           "${fhs}/bin/ss14-watchdog-fhs";
 
+        # ss14 servers can be bursty sometimes
+        LogRateLimitBurst = 3000;
+        LogRateLimitIntervalSec = 5;
+
         PrivateTmp = true;
         ProtectHome = true;
         ProtectSystem = "strict";

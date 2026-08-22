@@ -236,7 +236,6 @@ in
             description = "Valid host names clients may use to connect.";
           };
 
-          # TODO: rebind this as Url -> Urls idk why it's plural in robust.cdn...
           Urls = mkOption {
             type = types.str;
             default = "http://localhost:${toString cfg.port}/";
