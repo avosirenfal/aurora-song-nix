@@ -52,7 +52,7 @@ in
               ApiPort = mkOption {
                 type = types.port;
                 description = ''
-                  Port of the game server on localhost. Must match the HTTP status 
+                  Port of the game server on localhost. Must match the HTTP status
                   API port configured in the server's own config.
                 '';
               };
@@ -88,7 +88,7 @@ in
                 type = types.ints.positive;
                 default = 60;
                 description = ''
-                  Time in seconds the Watchdog waits for a ping from the server 
+                  Time in seconds the Watchdog waits for a ping from the server
                   before assuming it crashed and forcefully restarting it.
                 '';
               };
@@ -204,7 +204,7 @@ in
             default = "http://localhost:5000/";
             example = "https://builds.spacestation14.io/watchdog/";
             description = ''
-              The external URL of the Watchdog. This is passed to instances automatically 
+              The external URL of the Watchdog. This is passed to instances automatically
               so they can check in. Required for the game servers to communicate.
             '';
           };
@@ -233,8 +233,8 @@ in
                   type = types.bool;
                   default = false;
                   description = ''
-                    If enabled, the watchdog will not shut down game servers when it is 
-                    shut down, and will resume watching them on restart. This also sets 
+                    If enabled, the watchdog will not shut down game servers when it is
+                    shut down, and will resume watching them on restart. This also sets
                     `KillMode=process` in the systemd service.
                   '';
                 };
@@ -262,7 +262,7 @@ in
       };
       default = { };
       description = ''
-        Global watchdog settings, serialized to YAML. `$VAR` placeholders are supported 
+        Global watchdog settings, serialized to YAML. `$VAR` placeholders are supported
         for secrets and will be expanded from `environmentFile`.
       '';
     };
@@ -272,7 +272,7 @@ in
       default = format.generate "appsettings.yml" cfg.settings;
       defaultText = literalMD "Generated from [](#opt-services.ss14-watchdog.settings).";
       description = ''
-        Path to the Watchdog config file. `$VAR` placeholders are expanded 
+        Path to the Watchdog config file. `$VAR` placeholders are expanded
         with envsubst at startup if an `environmentFile` is provided.
       '';
     };
@@ -351,6 +351,10 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
+
+      # nixos should never restart or stop this service automatically
+      restartIfChanged = false;
+      stopIfChanged = false;
 
       # TODO: the documentation says...
       # "This is used for git method to not fail instantly."

@@ -18,6 +18,9 @@
       auto_sync = false;
       update_check = false;
       search_mode = "fuzzy";
+      history_filter = [
+          "^ " # space prefix prevents a command from entering history
+      ];
     };
   };
 }

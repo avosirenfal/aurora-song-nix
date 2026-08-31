@@ -19,7 +19,7 @@ let
     MinimumLevel = {
       Default = "Information";
       Override = {
-        SS14 = "Information";
+        SS14 = "Error"; #"Information";
         Microsoft = "Warning";
         "Microsoft.Hosting.Lifetime" = "Information";
         "Microsoft.AspNetCore" = "Warning";
@@ -45,7 +45,9 @@ in
 
   services.ss14-watchdog.environmentFile = secretsFile;
   services.ss14-watchdog.instances.main.ApiToken = "$AURORASONG_INSTANCE_TOKEN";
-  services.ss14-watchdog.settings.Process.PersistServers = true;
+  # this doesn't seem to work correctly... it causes the watchdog token to be incorrect
+  # TODO: replace watchdog with a systemd unit and a healthcheck script lmao
+  # services.ss14-watchdog.settings.Process.PersistServers = true;
   services.ss14-watchdog.settings.Serilog = serilog;
 
   services.robust-cdn.settings.BaseUrl = "https://cdn.aurorasong.gay/";

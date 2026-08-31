@@ -31,6 +31,9 @@
     port = 1212;
     max_connections = 256;
     log_late_msg = false;
+    # 10x buffer size, also changed max in sysctl
+    sendbuffersize = 1310710;
+    receivebuffersize = 1310710;
   };
 
   whitelist = {
