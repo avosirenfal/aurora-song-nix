@@ -36,6 +36,7 @@
           ./nix-settings.nix
           ./configuration.nix
           ./ss14.nix
+          ./grafana-psql.nix
           ./misc/misc.nix
           ./misc/ripgrep.nix
           {

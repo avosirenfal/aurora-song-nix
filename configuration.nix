@@ -78,6 +78,7 @@
     jujutsu
     htop
     iotop
+    nixfmt
     (pkgs.writeShellScriptBin "nxr" ''
       exec sudo nixos-rebuild --flake /root/nixos#aurora switch "$@"
     '')
