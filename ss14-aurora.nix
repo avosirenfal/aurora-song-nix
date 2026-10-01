@@ -9,7 +9,7 @@
 
   auth = {
     mode = 1;
-    server = "https://auth.playss14.com/";
+    server = "https://auth.spacestation14.com/";
   };
 
   status = {
@@ -21,7 +21,7 @@
   hub = {
     server_url = "ss14s://aurorasong.gay/game";
     # server_url = "ss14s://167.114.208.152/game";
-    hub_urls = "https://hub.playss14.com/";
+    hub_urls = "https://hub.spacestation14.com/";
     advertise = false;
     tags = "";
   };
